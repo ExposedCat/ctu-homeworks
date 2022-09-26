@@ -9,14 +9,10 @@ int main() {
     int even = 0;
     int min = 10001;
     int max = -10001;
-    int first = 1;
-    while (1) {
-        int number;
-		scanf("%d", &number);
+    for (int i = 1; i < argc; ++i) {
+        int number = atoi(argv[i]);
 
-		if (getchar() == EOF) {
-			break;
-		}
+        printf("%d", number);
 
         if (
             number < -10000 || number > 10000 ||
@@ -25,8 +21,9 @@ int main() {
             return 100;
         }
 
-        printf(first ? "%d" : ", %d", number);
-        first = 0;
+        if (i != argc - 1) {
+            printf(", ");
+        }
 
         sum += number;
         count++;
