@@ -1,69 +1,87 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+int invalid_input() {
+    fprintf(stderr, "Error: Chybny vstup!\n");
+    return 100;
+}
+
+int input_out_of_range() {
+    fprintf(stderr, "Error: Vstup mimo interval!\n");
+    return 101;
+}
+
+int width_is_not_odd() {
+    fprintf(stderr, "Error: Sirka neni liche cislo!\n");
+    return 102;
+}
+
+int too_big_fence() {
+    fprintf(stderr, "Error: Neplatna velikost plotu!\n");
+    return 103;
+}
+
+char* get_wall_char(int transparent, int i, int j) {
+    if (transparent) {
+        return " ";
+    }
+    return i % 2 ? (j % 2 ? "o" : "*") : (j % 2 ? "*" : "o");
+}
+
+void draw_house(int transparent, int width, int height, int fence) {
+    int roof_center = width / 2;
+    int roof_height = roof_center;
+    for (int i = 0; i < roof_height; ++i) {
+        for (int j = 0; j <= roof_center + i; ++j) {
+            printf(j == roof_center - i || j == roof_center + i ? "X" : " ");
+        }
+        printf("\n");
+    }
+    int fence_start = height - fence;
+    for (int i = 0; i < height; ++i) {
+        for (int j = 0; j < width; ++j) {
+            char* wall = get_wall_char(transparent, i, j);
+            char* line = i == 0 || i == height - 1 || j == 0 || j == width - 1 ? "X" : wall;
+            printf("%s", line);
+        }
+        if (fence != -1 && i >= fence_start) {
+            if (fence % 2) {
+                printf("|");
+            }
+            char* fence_part = i == fence_start || i == fence + fence_start - 1 ? "-|" : " |";
+            for (int i = 0; i < fence / 2; ++i) {
+                printf("%s", fence_part);
+            }
+        }
+        printf("\n");
+    }
+}
+
 int main() {
-    int sum = 0;
-    int count = 0;
-    int positive = 0;
-    int negative = 0;
-    int even = 0;
-    int min = 10001;
-    int max = -10001;
-    for (int i = 1; i < argc; ++i) {
-        int number = atoi(argv[i]);
-
-        printf("%d", number);
-
-        if (
-            number < -10000 || number > 10000 ||
-            number < -10000 || number > 10000) {
-            printf("\nError: Vstup je mimo interval!\n");
-            return 100;
+    int valid;
+    int width;
+    valid = scanf("%d", &width);
+    int height = -1;
+    valid = valid && scanf("%d", &height);
+    if (!valid) {
+        return invalid_input();
+    }
+    if (width < 3 || width > 69 || height < 3 || height > 69) {
+        return input_out_of_range();
+    }
+    if (width % 2 == 0) {
+        return width_is_not_odd();
+    }
+    int fence = -1;
+    if (width == height) {
+        valid = scanf("%d", &fence);
+        if (!valid || valid == -1) {
+            return invalid_input();
         }
-
-        if (i != argc - 1) {
-            printf(", ");
-        }
-
-        sum += number;
-        count++;
-        if (number > 0) {
-            positive++;
-        } else if (number < 0) {
-            negative++;
-        }
-        if (number % 2 == 0) {
-            even++;
-        }
-        if (number > max) {
-            max = number;
-        }
-        if (number < min) {
-            min = number;
+        if (fence >= width || !fence) {
+            return too_big_fence();
         }
     }
-    float positive_percent = (float)positive / count * 100;
-    float negative_percent = (float)negative / count * 100;
-
-    int odd = count - even;
-    float even_percent = (float)even / count * 100;
-    float odd_percent = 100 - even_percent;
-
-    float average = (float)sum / count;
-
-    printf("\n");
-    printf("Pocet cisel: %d\n", count);
-    printf("Pocet kladnych: %d\n", positive);
-    printf("Pocet zapornych: %d\n", negative);
-    printf("Procento kladnych: %.2f\n", positive_percent);
-    printf("Procento zapornych: %.2f\n", negative_percent);
-    printf("Pocet sudych: %d\n", even);
-    printf("Pocet lichych: %d\n", odd);
-    printf("Procento sudych: %.2f\n", even_percent);
-    printf("Procento lichych: %.2f\n", odd_percent);
-    printf("Prumer: %.2f\n", average);
-    printf("Maximum: %d\n", max);
-    printf("Minimum: %d\n", min);
-
+    draw_house(width != height, width, height, fence);
     return 0;
 }
