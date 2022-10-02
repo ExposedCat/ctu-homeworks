@@ -1,7 +1,12 @@
+.vscode
+*/*/.vscode
+
 # CPL
 CPL/simple-c-program/triangle
 
 # RPH
+RPH/*/__pycache__
+RPH/*/env
 
 # PRP
 PRP/*/main
