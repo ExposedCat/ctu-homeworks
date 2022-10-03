@@ -2,74 +2,105 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-void add_to_dict(long* dict, long value, int* size) {
-    for (int i = 0; i < *size; i += 2) {
-        if (dict[i] == value) {
-            dict[i + 1]++;
-            return;
-        }
-    }
-    dict[(*size)++] = value;
-    dict[(*size)++] = 1;
-}
-
-long* get_prime_factors(long n, int* size) {
-    int count = 0;
-    long* factors = malloc(sizeof(long) * 100);
-
-    while (n % 2 == 0) {
-        add_to_dict(factors, 2, &count);
-        n = n / 2;
-    }
-    for (int i = 3; i <= sqrt(n); i = i + 2) {
-        while (n % i == 0) {
-            add_to_dict(factors, i, &count);
-            n = n / i;
-        }
-    }
-    if (n > 2) {
-        add_to_dict(factors, n, &count);
-    } else if (!count) {
-        add_to_dict(factors, 1, &count);
-    }
-
-    *size = count;
-    return factors;
-}
-
-void print_value(int is_first, long value, long power) {
-    if (!is_first) {
-        printf(" x ");
+void print_factor(long value, long power, int add_x) {
+    if (value == 1) {
+        printf("1\n");
+        return;
     }
     if (power > 1) {
         printf("%ld^%ld", value, power);
     } else {
         printf("%ld", value);
     }
+    if (add_x) {
+        printf(" x ");
+    }
 }
 
-int throw_invalid_input() {
+void print_prime_factors(long* sieve, long sieve_size, long n) {
+    printf("Prvociselny rozklad cisla %ld je:\n", n);
+    if (n == 1) {
+        print_factor(1, 1, 0);
+        return;
+    }
+    long factor = 0;
+    int power = 0;
+    for (int i = 0; factor < n; ++i) {
+        long prime = sieve[i];
+        if (!prime) {
+            break;
+        }
+        while (n % prime == 0) {
+            if (prime == factor) {
+                power++;
+            } else {
+                // Found next factor, print previous
+                // if it's not the first one
+                if (factor) {
+                    print_factor(factor, power, 1);
+                }
+                // Reset counters
+                factor = prime;
+                power = 1;
+            }
+            n /= prime;
+        }
+    }
+    // Print last factor
+    print_factor(factor ? factor : n, power ? power : 1, 0);
+    printf("\n");
+}
+
+long* get_prime_factors_sieve(long limit, long* size) {
+    long* numbers = malloc(sizeof(long) * limit);
+    for (long i = 2; i < limit; ++i) {
+        numbers[i] = 1;
+    }
+
+    for (long i = 2; i < limit; ++i) {
+        if (numbers[i]) {
+            for (long j = i * i; j < limit; j += i) {
+                numbers[j] = 0;
+            }
+        }
+    }
+
+    long factors_size = 0;
+    long* factors = malloc(sizeof(long) * limit);
+    for (long i = 2; i < limit; ++i) {
+        if (numbers[i]) {
+            factors[factors_size++] = i;
+        }
+    }
+    free(numbers);
+    factors = realloc(factors, sizeof(long) * factors_size);
+
+    *size = factors_size;
+    return factors;
+}
+
+int throw_invalid_input(long* sieve) {
     fprintf(stderr, "Error: Chybny vstup!\n");
+    free(sieve);
     return 100;
 }
 
 int main() {
+    long sieve_size;
+    long* sieve = get_prime_factors_sieve(1e6, &sieve_size);
+
     long value;
-    int size = 0;
     while (1) {
         int valid = scanf("%ld", &value);
         if (value == 0) {
             break;
         }
         if (!valid || value < 0) {
-            return throw_invalid_input();
+            return throw_invalid_input(sieve);
         }
-        long* factors = get_prime_factors(value, &size);
-        printf("Prvociselny rozklad cisla %ld je:\n", value);
-        for (int i = 0; i < size; i += 2) {
-            print_value(i == 0, factors[i], factors[i + 1]);
-        }
-        printf("\n");
+        print_prime_factors(sieve, sieve_size, value);
     }
+
+    free(sieve);
     return 0;
 }
