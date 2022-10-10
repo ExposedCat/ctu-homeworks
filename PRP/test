@@ -1,0 +1,99 @@
+#!/bin/bash
+
+R="\033[0;31m"
+G="\033[0;32m"
+B="\033[0;34m"
+E="\033[0m"
+
+# Compile
+printf "• Compiling…\n"
+make > /dev/null
+
+EXECUTABLE="main"
+DATA_PATH="data"
+ROOT_PATH=".."
+if [ -z $1 ]; then
+    if [ -f './data/pub01.in' ]; then
+        EXECUTABLE="../$EXECUTABLE"
+    else
+        DATA_PATH="data/man"
+        ROOT_PATH="../.."
+        EXECUTABLE="../../$EXECUTABLE"
+    fi
+else
+    DATA_PATH="data/opt"
+    ROOT_PATH="../.."
+    EXECUTABLE="../../$EXECUTABLE $@"
+fi
+
+
+# Test
+printf "• Testing…\n"
+mkdir -p "./$DATA_PATH/out"
+TESTS_NUMBER=$(command ls -1q $DATA_PATH/pub*.in | wc -l)
+ERRS_NUMBER=$(command ls -1q $DATA_PATH/pub*.err | wc -l)
+printf "• Found $B$TESTS_NUMBER$E tests\n"
+
+OUT_C=0
+ERR_C=0
+ALL_PASSED=1
+
+show_diff() {
+    C=0
+    diff "./pub$1.$2" "./out/my$1.$2"\
+    --old-line-format=$'- \033[0;31m%L\033[0m'\
+    --new-line-format='+ %L'\
+    --unchanged-line-format='' && printf "${G}std$2 correct$E" && C=1
+    if [ $C == 1 ]; then
+        if [ $2 == "out" ]; then
+            ((OUT_C=OUT_C+1))
+        else
+            ((ERR_C=ERR_C+1))
+        fi
+    else
+        ALL_PASSED=0
+    fi
+    echo
+}
+
+i=1
+cd "./$DATA_PATH"
+for file in *.in; do
+    printf "\n• Running test $B$i$E\n"
+    ID=$(echo $file | sed 's/pub\(.*\)\..*/\1/')
+    $EXECUTABLE < ./pub$ID.in 2> ./out/my$ID.err 1> ./out/my$ID.out
+    printf "· ${B}Result$E\n"
+    show_diff $ID 'out'
+    
+    if [ -f ./pub$ID.err ]; then
+        show_diff "$ID" 'err'
+    fi
+    ((i=i+1))
+done
+
+C=$G
+if [ $ALL_PASSED == 0 ]; then
+    C=$R
+fi
+
+C2=$G
+if [ $ERR_C != $ERRS_NUMBER ]; then
+    C2=$R
+fi
+
+printf "\nCorrect stdout: $C$OUT_C$E/$TESTS_NUMBER\n"
+printf "Correct stderr: $C2$ERR_C$E/$ERRS_NUMBER\n"
+
+if [ $ALL_PASSED == 1 ]; then
+    printf "\n• All tests passed, packaging…\n"
+    cd $ROOT_PATH
+    zip -q package.zip main.c
+    if [[ $? != 0 ]]; then
+        printf "${R}E: Can't pack ${B}main.c$E due to unexpected error.\n"
+        printf "Try to do it yourself via\n${B}zip package.zip main.c\n"
+        exit 1
+    else
+        printf "• Homework archive ${B}package.zip$E created, now you can upload it to the BRUTE:\n"
+        printf "https://cw.felk.cvut.cz/brute/student/course/1380\n"
+    fi
+fi

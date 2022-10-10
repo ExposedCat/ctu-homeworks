@@ -1,0 +1,50 @@
+#!/bin/bash
+
+R="\033[0;31m"
+G="\033[0;32m"
+B="\033[0;34m"
+E="\033[0m"
+
+check_errors() {
+    ERR_CODE=$?
+    if [[ $ERR_CODE != 0 ]]; then
+        printf "${R}$1${E}\n" || "${R}E: Unexpected error$E\n"
+        exit $ERR_CODE
+    else
+        printf "· Done\n"
+    fi
+}
+
+if [ -z $1 ]; then
+    printf "E: Homework number is not specified\n"
+    exit 1
+else
+    HW_NUMBER="$(printf %02d $1)"
+    ARCHIVE_NAME="b0b36prp-hw$HW_NUMBER"
+    
+    printf "• Downloading data…\n"
+    curl -sO "https://cw.fel.cvut.cz/wiki/_media/courses/b0b36prp/hw/$ARCHIVE_NAME.zip"
+    check_errors "E: Homework not found"
+    
+    printf "• Unpacking…\n"
+    unzip -q "./$ARCHIVE_NAME.zip"
+    HW_DIR="homework-$HW_NUMBER"
+    mv $ARCHIVE_NAME $HW_DIR 2>/dev/null
+    check_errors "E: Homework aready exists"
+    
+    printf "• Cleaning…\n"
+    rm "./$ARCHIVE_NAME.zip" 2>/dev/null
+    
+    printf "• Patching Makefile…\n"
+    sed -i "s/HW=.*/HW=main/" "$HW_DIR/Makefile" 2>/dev/null
+    check_errors "E: Makefile not found"
+    
+    printf "\n"
+    printf "${G}Homework $HW_NUMBER successfully set up$E\n"
+    printf "• Open it with\n"
+    printf "${B}cd $HW_DIR$E\n"
+    printf "· Ensure test script can be executed with\n"
+    printf "${B}chmod +x ../test$E\n"
+    printf "• Run tests with\n"
+    printf "${B}../test$E\n"
+fi
