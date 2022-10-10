@@ -6,9 +6,7 @@ DEFECT = True
 
 
 class MyPlayer:
-    '''
-    Plays with last opponent's move unless being betrayed twice
-    '''
+    '''<img src="https://i.imgur.com/yed5Zfk.gif">'''
 
     def __init__(
         self,
