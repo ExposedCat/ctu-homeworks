@@ -2,7 +2,7 @@
 */*/.vscode
 
 # CPL
-CPL/simple-c-program/triangle
+CPL/*/public
 
 # RPH
 RPH/*/__pycache__
@@ -10,5 +10,10 @@ RPH/*/env
 
 # PRP
 PRP/*/main
-PRP/*/out
+PRP/*/data
+PRP/*/b0b36prp-*
+PRP/*/generate_solutions.sh
+PRP/*/generate_solutions_bonus.sh
+PRP/*/Makefile
+PRP/*/vgcore.*
 PRP/*/package.zip
