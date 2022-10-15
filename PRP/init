@@ -36,7 +36,12 @@ else
     rm "./$ARCHIVE_NAME.zip" 2>/dev/null
     
     printf "• Patching Makefile…\n"
-    sed -i "s/HW=.*/HW=main/" "$HW_DIR/Makefile" 2>/dev/null
+    echo 'FLAGS= -pedantic -Wall -Werror -Wextra -std=c99 -O3' > $HW_DIR/Makefile
+    echo 'HW=main' >> $HW_DIR/Makefile
+    echo 'ZIP=zip' >> $HW_DIR/Makefile
+    echo '' >> $HW_DIR/Makefile
+    echo '$(HW): main.c' >> $HW_DIR/Makefile
+    echo -e '\tclang $(FLAGS) main.c -o $(HW)' >> $HW_DIR/Makefile
     check_errors "E: Makefile not found"
     
     printf "\n"

@@ -7,7 +7,14 @@ E="\033[0m"
 
 # Compile
 printf "• Compiling…\n"
-make > /dev/null
+make 1> /dev/null
+
+if [[ $? != 0 ]]; then
+    printf "${R}E: Please fix compilation errors to test the program${E}\n"
+    exit $ERR_CODE
+else
+    printf "· Done\n"
+fi
 
 EXECUTABLE="main"
 DATA_PATH="data"
@@ -30,8 +37,8 @@ fi
 # Test
 printf "• Testing…\n"
 mkdir -p "./$DATA_PATH/out"
-TESTS_NUMBER=$(command ls -1q $DATA_PATH/pub*.in | wc -l)
-ERRS_NUMBER=$(command ls -1q $DATA_PATH/pub*.err | wc -l)
+TESTS_NUMBER=$(command ls -1q $DATA_PATH/pub*.in 2> /dev/null | wc -l)
+ERRS_NUMBER=$(command ls -1q $DATA_PATH/pub*.err 2> /dev/null | wc -l)
 printf "• Found $B$TESTS_NUMBER$E tests\n"
 
 OUT_C=0
@@ -43,7 +50,7 @@ show_diff() {
     diff "./pub$1.$2" "./out/my$1.$2"\
     --old-line-format=$'- \033[0;31m%L\033[0m'\
     --new-line-format='+ %L'\
-    --unchanged-line-format='' && printf "${G}std$2 correct$E" && C=1
+    --unchanged-line-format='' 2> /dev/null && printf "${G}std$2 correct$E" && C=1
     if [ $C == 1 ]; then
         if [ $2 == "out" ]; then
             ((OUT_C=OUT_C+1))
@@ -59,6 +66,9 @@ show_diff() {
 i=1
 cd "./$DATA_PATH"
 for file in *.in; do
+    if [ $file == '*.in' ]; then
+        break
+    fi
     printf "\n• Running test $B$i$E\n"
     ID=$(echo $file | sed 's/pub\(.*\)\..*/\1/')
     $EXECUTABLE < ./pub$ID.in 2> ./out/my$ID.err 1> ./out/my$ID.out
