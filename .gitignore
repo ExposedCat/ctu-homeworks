@@ -17,3 +17,5 @@ PRP/*/generate_solutions_bonus.sh
 PRP/*/Makefile
 PRP/*/vgcore.*
 PRP/*/package.zip
+PRP/practices/cv*/*
+!PRP/practices/**/*.c
