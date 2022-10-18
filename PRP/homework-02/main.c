@@ -12,15 +12,13 @@ int main() {
     int first = 1;
     while (1) {
         int number;
-		scanf("%d", &number);
+        scanf("%d", &number);
 
-		if (getchar() == EOF) {
-			break;
-		}
+        if (getchar() == EOF) {
+            break;
+        }
 
-        if (
-            number < -10000 || number > 10000 ||
-            number < -10000 || number > 10000) {
+        if (number < -10000 || number > 10000) {
             printf("\nError: Vstup je mimo interval!\n");
             return 100;
         }

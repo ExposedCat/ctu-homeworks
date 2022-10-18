@@ -2,6 +2,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define MAX_PRIME 1e6
+
+int throw_invalid_input(long* sieve) {
+    fprintf(stderr, "Error: Chybny vstup!\n");
+    free(sieve);
+    return 100;
+}
+
 void print_factor(long value, long power, int add_x) {
     if (value == 1) {
         printf("1\n");
@@ -79,15 +87,9 @@ long* get_prime_factors_sieve(long limit, long* size) {
     return factors;
 }
 
-int throw_invalid_input(long* sieve) {
-    fprintf(stderr, "Error: Chybny vstup!\n");
-    free(sieve);
-    return 100;
-}
-
 int main() {
     long sieve_size;
-    long* sieve = get_prime_factors_sieve(1e6, &sieve_size);
+    long* sieve = get_prime_factors_sieve(MAX_PRIME, &sieve_size);
 
     long value;
     while (1) {

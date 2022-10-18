@@ -2,18 +2,23 @@
 #include <stdlib.h>
 
 #define HUNDRED 101
-#define MAX 1e6
+#define MAX_PRIME 1e6
+
+int throw_invalid_input() {
+    fprintf(stderr, "Error: Chybny vstup!\n");
+    return 100;
+}
 
 int *get_prime_factors_sieve(int *sieve_size) {
-    int *numbers = malloc(sizeof(int) * MAX);
-    for (int i = 2; i < MAX; ++i) {
+    int *numbers = malloc(sizeof(int) * MAX_PRIME);
+    for (int i = 2; i < MAX_PRIME; ++i) {
         numbers[i] = 1;
     }
 
-    for (int i = 2; i < MAX; ++i) {
+    for (int i = 2; i < MAX_PRIME; ++i) {
         if (numbers[i]) {
             (*sieve_size)++;
-            for (long j = (long)i * i; j < MAX; j += i) {
+            for (long j = (long)i * i; j < MAX_PRIME; j += i) {
                 numbers[j] = 0;
             }
         }
@@ -21,7 +26,7 @@ int *get_prime_factors_sieve(int *sieve_size) {
 
     int j = 0;
     int *sieve = malloc(sizeof(int) * (*sieve_size));
-    for (int i = 2; i < MAX; ++i) {
+    for (int i = 2; i < MAX_PRIME; ++i) {
         if (numbers[i]) {
             sieve[j++] = i;
         }
@@ -44,6 +49,7 @@ void take(int *part, short **array, int input_index, int index) {
     *part += array[input_index][index];
 }
 
+// Ensure number divides by prime and divide if so
 short ensure_divides(short **array, int *input, int input_index, int prime) {
     int prime_length = get_num_length(prime);
     int input_length = input[input_index];
@@ -87,7 +93,7 @@ short ensure_divides(short **array, int *input, int input_index, int prime) {
     return exit;
 }
 
-short ensure_one(short **array, int *input, int input_index) {
+short is_one(short **array, int *input, int input_index) {
     for (int i = 0; i < input[input_index] - 1; ++i) {
         if (array[input_index][i] != 0) {
             return 0;
@@ -129,7 +135,7 @@ void print_factors(int *sieve, int sieve_size, short **array, int *input, int in
     }
     int number = 0;
     int power = 0;
-    while (!ensure_one(array, input, input_index)) {
+    while (!is_one(array, input, input_index)) {
         for (int i = 0; i < sieve_size; ++i) {
             if (ensure_divides(array, input, input_index, sieve[i]) == 1) {
                 if (sieve[i] == number) {
@@ -170,9 +176,8 @@ int main() {
                 break;
             }
             if (next > '9' || next < '0') {
-                fputs("Error: Chybny vstup!\n", stderr);
-                exit_code = 100;
-    			break;
+                exit_code = throw_invalid_input();
+                break;
             }
             array[index][input[index]++] = (int)(next - '0');
         }
