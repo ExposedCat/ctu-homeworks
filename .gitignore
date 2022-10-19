@@ -14,7 +14,6 @@ PRP/*/data
 PRP/*/b0b36prp-*
 PRP/*/generate_solutions.sh
 PRP/*/generate_solutions_bonus.sh
-PRP/*/Makefile
 PRP/*/vgcore.*
 PRP/*/package.zip
 PRP/practices/cv*/*
