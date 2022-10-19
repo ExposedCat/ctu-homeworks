@@ -3,6 +3,9 @@
 
 # CPL
 CPL/*/public
+CPL/*/data
+CPL/*/main
+CPL/*/package.zip
 
 # RPH
 RPH/*/__pycache__
