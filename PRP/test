@@ -48,8 +48,8 @@ ALL_PASSED=1
 show_diff() {
     C=0
     diff "./pub$1.$2" "./out/my$1.$2"\
-    --old-line-format=$'- \033[0;31m%L\033[0m'\
-    --new-line-format='+ %L'\
+    --old-line-format=$'- \033[0;32m%L\033[0m'\
+    --new-line-format=$'- \033[0;31m%L\033[0m'\
     --unchanged-line-format='' 2> /dev/null && printf "${G}std$2 correct$E" && C=1
     if [ $C == 1 ]; then
         if [ $2 == "out" ]; then

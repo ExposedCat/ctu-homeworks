@@ -1,40 +1,42 @@
-#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 
+// Number size restrictions
 #define MAX_PRIME 1e6
 
-int throw_invalid_input(long* sieve) {
+// Helpers
+int throw_invalid_input(int* sieve) {
     fprintf(stderr, "Error: Chybny vstup!\n");
     free(sieve);
     return 100;
 }
 
-void print_factor(long value, long power, int add_x) {
+// Services
+void print_factor(int value, int power, int add_x) {
     if (value == 1) {
         printf("1\n");
         return;
     }
     if (power > 1) {
-        printf("%ld^%ld", value, power);
+        printf("%d^%d", value, power);
     } else {
-        printf("%ld", value);
+        printf("%d", value);
     }
     if (add_x) {
         printf(" x ");
     }
 }
 
-void print_prime_factors(long* sieve, long sieve_size, long n) {
+void print_prime_factors(int* sieve, int sieve_size, long n) {
     printf("Prvociselny rozklad cisla %ld je:\n", n);
     if (n == 1) {
         print_factor(1, 1, 0);
         return;
     }
-    long factor = 0;
+    int factor = 0;
     int power = 0;
-    for (int i = 0; factor < n; ++i) {
-        long prime = sieve[i];
+    for (int i = 0; factor < n && i < sieve_size; ++i) {
+        int prime = sieve[i];
         if (!prime) {
             break;
         }
@@ -59,39 +61,41 @@ void print_prime_factors(long* sieve, long sieve_size, long n) {
     printf("\n");
 }
 
-long* get_prime_factors_sieve(long limit, long* size) {
-    long* numbers = malloc(sizeof(long) * limit);
-    for (long i = 2; i < limit; ++i) {
+int* get_prime_numbers_sieve(int* sieve_size) {
+    // Create binary list of prime numbers
+    int* numbers = malloc(sizeof(int) * MAX_PRIME);
+    for (int i = 2; i < MAX_PRIME; ++i) {
         numbers[i] = 1;
     }
-
-    for (long i = 2; i < limit; ++i) {
+    for (int i = 2; i < MAX_PRIME; ++i) {
         if (numbers[i]) {
-            for (long j = i * i; j < limit; j += i) {
+            (*sieve_size)++;
+            for (long j = (long)i * i; j < MAX_PRIME; j += i) {
                 numbers[j] = 0;
             }
         }
     }
 
-    long factors_size = 0;
-    long* factors = malloc(sizeof(long) * limit);
-    for (long i = 2; i < limit; ++i) {
+    // Create pure list of prime numbers
+    int j = 0;
+    int* sieve = malloc(sizeof(int) * (*sieve_size));
+    for (int i = 2; i < MAX_PRIME; ++i) {
         if (numbers[i]) {
-            factors[factors_size++] = i;
+            sieve[j++] = i;
         }
     }
+    // Clean extra memory
     free(numbers);
-    factors = realloc(factors, sizeof(long) * factors_size);
+    sieve = realloc(sieve, sizeof(int) * (*sieve_size));
 
-    *size = factors_size;
-    return factors;
+    return sieve;
 }
 
 int main() {
-    long sieve_size;
-    long* sieve = get_prime_factors_sieve(MAX_PRIME, &sieve_size);
+    int sieve_size = 0;
+    int* sieve = get_prime_numbers_sieve(&sieve_size);
 
-    long value;
+    long value = 0;
     while (1) {
         int valid = scanf("%ld", &value);
         if (value == 0) {

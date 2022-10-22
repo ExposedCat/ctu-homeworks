@@ -1,38 +1,73 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+// Number size restrictions
 #define HUNDRED 101
 #define MAX_PRIME 1e6
+
+// Helpers
+int throw_invalid_input();
+int get_num_length(int number);
+
+// Services
+int *get_prime_numbers_sieve(int *sieve_size);
+// Used for «column» division to take one digit
+void take(int *part, short **array, int input_index, int index);
+// Ensure number divides by prime and divide if so
+short ensure_divides(short **array, int *input, int input_index, int prime);
+short is_one(short **array, int *input, int input_index);
+void print_factor(int value, int power, int add_x);
+void print_factors(                             //
+    int *sieve, int sieve_size,                 //
+    short **array, int *input, int input_index  //
+);
+
+int main() {
+    int exit_code = 0;
+
+    int sieve_size = 0;
+    int *sieve = get_prime_numbers_sieve(&sieve_size);
+
+    int *input = calloc(HUNDRED, sizeof(int));
+    // Binary matrix
+    short **array = malloc(HUNDRED * sizeof(short *));
+    for (int i = 0; i < HUNDRED; ++i) {
+        array[i] = calloc(HUNDRED, sizeof(short));
+    }
+
+    int index = 0;
+    while (1) {
+        char next = fgetc(stdin);
+        if (next == '\n') {
+            print_factors(sieve, sieve_size, array, input, index++);
+            continue;
+        } else {
+            if (next == '0' && input[index] == 0) {
+                break;
+            }
+            // Not a digit
+            if (next > '9' || next < '0') {
+                exit_code = throw_invalid_input();
+                break;
+            }
+            array[index][input[index]++] = (int)(next - '0');
+        }
+    }
+
+    // Clear extra memory
+    free(sieve);
+    free(input);
+    for (int i = 0; i < HUNDRED; ++i) {
+        free(array[i]);
+    }
+    free(array);
+
+    return exit_code;
+}
 
 int throw_invalid_input() {
     fprintf(stderr, "Error: Chybny vstup!\n");
     return 100;
-}
-
-int *get_prime_factors_sieve(int *sieve_size) {
-    int *numbers = malloc(sizeof(int) * MAX_PRIME);
-    for (int i = 2; i < MAX_PRIME; ++i) {
-        numbers[i] = 1;
-    }
-
-    for (int i = 2; i < MAX_PRIME; ++i) {
-        if (numbers[i]) {
-            (*sieve_size)++;
-            for (long j = (long)i * i; j < MAX_PRIME; j += i) {
-                numbers[j] = 0;
-            }
-        }
-    }
-
-    int j = 0;
-    int *sieve = malloc(sizeof(int) * (*sieve_size));
-    for (int i = 2; i < MAX_PRIME; ++i) {
-        if (numbers[i]) {
-            sieve[j++] = i;
-        }
-    }
-    free(numbers);
-    return realloc(sieve, sizeof(int) * (*sieve_size));
 }
 
 int get_num_length(int number) {
@@ -44,12 +79,41 @@ int get_num_length(int number) {
     return length;
 }
 
+int *get_prime_numbers_sieve(int *sieve_size) {
+    // Create binary list of prime numbers
+    int *numbers = malloc(sizeof(int) * MAX_PRIME);
+    for (int i = 2; i < MAX_PRIME; ++i) {
+        numbers[i] = 1;
+    }
+    for (int i = 2; i < MAX_PRIME; ++i) {
+        if (numbers[i]) {
+            (*sieve_size)++;
+            for (long j = (long)i * i; j < MAX_PRIME; j += i) {
+                numbers[j] = 0;
+            }
+        }
+    }
+
+    // Create pure list of prime numbers
+    int j = 0;
+    int *sieve = malloc(sizeof(int) * (*sieve_size));
+    for (int i = 2; i < MAX_PRIME; ++i) {
+        if (numbers[i]) {
+            sieve[j++] = i;
+        }
+    }
+    // Clean extra memory
+    free(numbers);
+    sieve = realloc(sieve, sizeof(int) * (*sieve_size));
+
+    return sieve;
+}
+
 void take(int *part, short **array, int input_index, int index) {
     *part *= 10;
     *part += array[input_index][index];
 }
 
-// Ensure number divides by prime and divide if so
 short ensure_divides(short **array, int *input, int input_index, int prime) {
     int prime_length = get_num_length(prime);
     int input_length = input[input_index];
@@ -123,7 +187,8 @@ void print_factor(int value, int power, int add_x) {
     }
 }
 
-void print_factors(int *sieve, int sieve_size, short **array, int *input, int input_index) {
+void print_factors(int *sieve, int sieve_size, short **array, int *input,
+                   int input_index) {
     printf("Prvociselny rozklad cisla ");
     for (int i = 0; i < input[input_index]; ++i) {
         printf("%d", array[input_index][i]);
@@ -151,43 +216,4 @@ void print_factors(int *sieve, int sieve_size, short **array, int *input, int in
     }
     print_factor(number, power, 0);
     printf("\n");
-}
-
-int main() {
-    int exit_code = 0;
-
-    int sieve_size = 0;
-    int *sieve = get_prime_factors_sieve(&sieve_size);
-
-    int *input = calloc(HUNDRED, sizeof(int));
-    short **array = malloc(HUNDRED * sizeof(short *));
-    for (int i = 0; i < HUNDRED; ++i) {
-        array[i] = calloc(HUNDRED, sizeof(short));
-    }
-
-    int index = 0;
-    while (1) {
-        char next = fgetc(stdin);
-        if (next == '\n') {
-            print_factors(sieve, sieve_size, array, input, index++);
-            continue;
-        } else {
-            if (next == '0' && input[index] == 0) {
-                break;
-            }
-            if (next > '9' || next < '0') {
-                exit_code = throw_invalid_input();
-                break;
-            }
-            array[index][input[index]++] = (int)(next - '0');
-        }
-    }
-
-    free(sieve);
-    free(input);
-    for (int i = 0; i < HUNDRED; ++i) {
-        free(array[i]);
-    }
-    free(array);
-    return exit_code;
 }

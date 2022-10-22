@@ -2,9 +2,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-enum errors {
-    INVALID_INPUT
-};
+// Types
+
+enum errors { INVALID_INPUT };
 
 typedef struct Matrix {
     int n;
@@ -14,11 +14,105 @@ typedef struct Matrix {
     int** body;
 } Matrix;
 
-char* error_hints[1] = {
-    "Error: Chybny vstup!\n"};
+char* error_hints[1] = {"Error: Chybny vstup!\n"};
 
-int error_codes[1] = {
-    100};
+int error_codes[1] = {100};
+
+// Helpers
+void raise_error(int code);
+
+// Services
+Matrix** push(Matrix** list, int* size, Matrix* matrix);
+void free_list(Matrix** list, int size, int free_self);
+Matrix* input_matrix(int* created);
+void print_matrix(Matrix* matrix);
+Matrix* mirror(Matrix* matrix);
+Matrix* sum_matrices(Matrix* matrix1, Matrix* matrix2);
+Matrix* multiply_matrices(Matrix* matrix1, Matrix* matrix2);
+Matrix* calculate(Matrix** list, int size, char operation);
+void free_matrix(Matrix* matrix, int size);
+// To get matrix from list by name
+Matrix* get_matrix(Matrix** list, int size, char name);
+
+int main() {
+    int size = 0;
+    Matrix** matrices = malloc(sizeof(Matrix**));
+    int f_size = 0;
+    Matrix** for_free = malloc(sizeof(Matrix**));
+
+    while (1) {
+        int created;
+        Matrix* matrix = input_matrix(&created);
+        if (!created) {
+            break;
+        }
+        matrices = push(matrices, &size, matrix);
+    }
+
+    int m_size = 0;
+    Matrix** for_multiplication = malloc(sizeof(Matrix**));
+    int s_size = 0;
+    Matrix** for_sum = malloc(sizeof(Matrix**));
+
+    int should_mirror = 0;
+    int switch_sum = 0;
+    while (1) {
+        char name;
+        char operation;
+        scanf("%c%c", &name, &operation);
+        Matrix* matrix = get_matrix(matrices, size, name);
+        if (operation != '*') {
+            if (should_mirror) {
+                matrix = mirror(matrix);
+                matrices = push(matrices, &size, matrix);
+                should_mirror = 0;
+            }
+            if (operation == '-') {
+                should_mirror = 1;
+            }
+            if (switch_sum) {
+                for_multiplication = push(for_multiplication, &m_size, matrix);
+                switch_sum = 0;
+            } else {
+                for_sum = push(for_sum, &s_size, matrix);
+            }
+            if (m_size > 1) {
+                Matrix* calculated = calculate(for_multiplication, m_size, '*');
+                m_size = 0;
+                for_sum = push(for_sum, &s_size, calculated);
+                for_free = push(for_free, &f_size, calculated);
+            }
+        } else {
+            for_multiplication = push(for_multiplication, &m_size, matrix);
+            switch_sum = 1;
+        }
+        if (operation == '\n') {
+            break;
+        }
+    }
+
+    free(for_multiplication);
+
+    // Calculate sum
+    Matrix* sum = NULL;
+    if (s_size) {
+        sum = for_sum[0];
+        if (s_size > 1) {
+            sum = calculate(for_sum, s_size, '+');
+        }
+    }
+
+    if (sum) {
+        print_matrix(sum);
+        free_matrix(sum, sum->n);
+    }
+
+    free_list(matrices, size, 1);
+    free_list(for_free, f_size, 1);
+    free(for_sum);
+
+    return 0;
+}
 
 void raise_error(int code) {
     fprintf(stderr, "%s", error_hints[code]);
@@ -138,9 +232,7 @@ Matrix* mirror(Matrix* matrix) {
 }
 
 Matrix* sum_matrices(Matrix* matrix1, Matrix* matrix2) {
-    if (
-        matrix1->n != matrix2->n ||
-        matrix1->m != matrix2->m) {
+    if (matrix1->n != matrix2->n || matrix1->m != matrix2->m) {
         return NULL;
     }
     Matrix* sum = malloc(sizeof(Matrix));
@@ -171,7 +263,8 @@ Matrix* multiply_matrices(Matrix* matrix1, Matrix* matrix2) {
         for (int j = 0; j < product->m; ++j) {
             product->body[i][j] = 0;
             for (int k = 0; k < matrix1->m; ++k) {
-                product->body[i][j] += matrix1->body[i][k] * matrix2->body[k][j];
+                product->body[i][j] +=
+                    matrix1->body[i][k] * matrix2->body[k][j];
             }
         }
     }
@@ -205,84 +298,4 @@ Matrix* get_matrix(Matrix** list, int size, char name) {
         }
     }
     return NULL;
-}
-
-int main() {
-    int size = 0;
-    Matrix** matrices = malloc(sizeof(Matrix**));
-    int f_size = 0;
-    Matrix** for_free = malloc(sizeof(Matrix**));
-
-    while (1) {
-        int created;
-        Matrix* matrix = input_matrix(&created);
-        if (!created) {
-            break;
-        }
-        matrices = push(matrices, &size, matrix);
-    }
-
-    int m_size = 0;
-    Matrix** for_multiplication = malloc(sizeof(Matrix**));
-    int s_size = 0;
-    Matrix** for_sum = malloc(sizeof(Matrix**));
-
-    int should_mirror = 0;
-    int switch_sum = 0;
-    while (1) {
-        char name;
-        char operation;
-        scanf("%c%c", &name, &operation);
-        Matrix* matrix = get_matrix(matrices, size, name);
-        if (operation != '*') {
-            if (should_mirror) {
-                matrix = mirror(matrix);
-                matrices = push(matrices, &size, matrix);
-                should_mirror = 0;
-            }
-            if (operation == '-') {
-                should_mirror = 1;
-            }
-            if (switch_sum) {
-                for_multiplication = push(for_multiplication, &m_size, matrix);
-                switch_sum = 0;
-            } else {
-                for_sum = push(for_sum, &s_size, matrix);
-            }
-            if (m_size > 1) {
-                Matrix* calculated = calculate(for_multiplication, m_size, '*');
-                m_size = 0;
-                for_sum = push(for_sum, &s_size, calculated);
-                for_free = push(for_free, &f_size, calculated);
-            }
-        } else {
-            for_multiplication = push(for_multiplication, &m_size, matrix);
-            switch_sum = 1;
-        }
-        if (operation == '\n') {
-            break;
-        }
-    }
-
-    free(for_multiplication);
-
-    // Calculate sum
-    Matrix* sum = NULL;
-    if (s_size) {
-        sum = for_sum[0];
-        if (s_size > 1) {
-            sum = calculate(for_sum, s_size, '+');
-        }
-    }
-
-    if (sum) {
-        print_matrix(sum);
-        free_matrix(sum, sum->n);
-    }
-
-    free_list(matrices, size, 1);
-    free_list(for_free, f_size, 1);
-    free(for_sum);
-
-    return 0;
 }
