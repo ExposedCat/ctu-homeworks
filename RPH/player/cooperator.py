@@ -13,10 +13,11 @@ class MyPlayer:
         payoff_matrix: Tuple[Tuple[Tuple[int]]],
         number_of_iterations: int | None = None,
     ) -> MyPlayer:
+        self.my = True
         pass
 
     def _basic_strategy(self) -> bool:
-        return C
+        return not self.my
 
     def move(self) -> bool:
         return self._basic_strategy()
@@ -24,4 +25,5 @@ class MyPlayer:
     def record_last_moves(
         self, my_last_move: bool, opponent_last_move: bool
     ) -> None:
+        self.my = my_last_move
         pass

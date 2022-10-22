@@ -27,21 +27,21 @@ from pavlov import MyPlayer as Pavlov
 
 # define the payoff matrix; see game.py for detailed explanation of this matrix
 payoff_matrix = (
-    ((2, 2), (1, 70)),
-    ((70, 1), (4, 4)),
+    ((2, 2), (1, 4)),
+    ((4, 1), (3, 3)),
 )
 
 # define the number of iterations
 number_of_iterations = 25
 
 for Player, name in (
-    (Analyzer, 'Analyzer'),
-    (Cooperator, 'Cooperator'),
-    (GuiltyTFT, 'GuiltyTFT'),
-    (TFT, 'TFT'),
-    (Defector, 'Defector'),
+    # (Analyzer, 'Analyzer'),
+    # (Cooperator, 'Cooperator'),
+    # (GuiltyTFT, 'GuiltyTFT'),
+    # (TFT, 'TFT'),
+    # (Defector, 'Defector'),
     (Adapter, 'Adapter'),
-    (Pavlov, 'Pavlov'),
+    # (Pavlov, 'Pavlov'),
 ):
     # create the players
     playerA = Player(payoff_matrix, number_of_iterations)

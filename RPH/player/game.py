@@ -59,9 +59,9 @@ class Game:
             playerA_move = playerA.move()
             playerB_move = playerB.move()
 
-            print(
-                f"{iteration}) {'D' if playerA_move else 'C'}, {'D' if playerB_move else 'C'}"
-            )
+            # print(
+            #     f"{iteration}) {'D' if playerA_move else 'C'}, {'D' if playerB_move else 'C'}"
+            # )
             # let the players know their last moves
             playerA.record_last_moves(playerA_move, playerB_move)
             playerB.record_last_moves(playerB_move, playerA_move)

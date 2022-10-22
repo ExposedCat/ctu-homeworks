@@ -15,14 +15,17 @@ class MyPlayer:
         payoff_matrix: Tuple[Tuple[Tuple[int]]],
         number_of_iterations: int | None = None,
     ) -> MyPlayer:
+        # Shortcuts
         self.CC = payoff_matrix[C][C]
         self.CD = payoff_matrix[C][D]
         self.DD = payoff_matrix[D][D]
         self.DC = payoff_matrix[D][C]
 
+        # Storage
         self.my_moves = []
         self.opponent_last_move = None
 
+        # Opponent analysis
         self.iteration = 1
         self.state_alternating = False
         self.analyzed = False
@@ -36,7 +39,9 @@ class MyPlayer:
         self.opponent_is_constant = None
         self.opponents_constant = None
 
+        # Matrix analysis
         self.preferred = self.DD[0] > self.CC[0]
+        self.PP = payoff_matrix[self.preferred][self.preferred]
         self.matrix_is_classic = False
         self.matrix_is_obvious = False
         self.matrix_is_alternating = False
@@ -48,7 +53,7 @@ class MyPlayer:
             # Matrix is Obvious
             self.matrix_is_obvious = True
             self.preferred = obvious_move
-        elif 2 * self.CC[0] < self.CD[0] + self.DC[0]:
+        elif 2 * self.PP[0] < self.CD[0] + self.DC[0]:
             # Matrix is Alternating
             self.matrix_is_alternating = True
         else:
@@ -77,6 +82,7 @@ class MyPlayer:
         return self.iteration != 2
 
     def strategy_smart_tft(self, initial: bool = C) -> bool:
+        '''Play last own move if response was preferred'''
         if not len(self.my_moves):
             return initial
         if self.opponent_last_move == self.preferred:
@@ -86,40 +92,42 @@ class MyPlayer:
 
     def move(self) -> bool:
         self._analyze_opponent()
+        smart_tft_move = self.strategy_smart_tft()
+        next_move = smart_tft_move
         if not self.analyzed:
-            move = self.strategy_analyzing()
+            next_move = self.strategy_analyzing()
         else:
             if self.matrix_is_obvious:
                 if (
                     self.opponent_is_constant
                     and self.opponents_constant != self.preferred
                 ):
-                    move = D
+                    next_move = D
                 elif self.opponent_is_tft:
-                    move = self.preferred
+                    next_move = self.preferred
                 else:
-                    move = self.strategy_smart_tft()
+                    next_move = smart_tft_move
             elif self.matrix_is_alternating:
                 if self.opponent_is_constant:
                     if self.opponents_constant == D:
-                        move = D
+                        next_move = D
                     else:
-                        move = not self.my_moves[-1]
+                        next_move = not self.my_moves[-1]
                 else:
                     if not self.state_alternating and randint(1, 5) == 1:
                         self.state_alternating = True
-                        move = not self.my_moves[-1]
+                        next_move = not self.my_moves[-1]
                     else:
-                        move = self.strategy_smart_tft()
+                        next_move = smart_tft_move
             elif self.opponent_is_constant:
-                move = D
+                next_move = D
             elif self.opponent_is_tft:
-                move = self.preferred
+                next_move = self.preferred
             elif self.opponent_is_random:
-                move = self.strategy_smart_tft()
+                next_move = smart_tft_move
 
         self.iteration += 1
-        return move
+        return next_move
 
     def record_last_moves(
         self, my_last_move: bool, opponent_last_move: bool
