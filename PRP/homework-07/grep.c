@@ -13,7 +13,7 @@
 enum errors { UNDEFINED_PATTERN, CANT_OPEN_FILE };
 typedef struct SizedList {
     int size;
-    string* body;
+    int* body;
 } SizedList;
 
 // Shortcuts
@@ -23,27 +23,43 @@ typedef struct SizedList {
 
 const string error_hints[E_NUM] = {
     //
-    "Search pattern is not specified",    //
-    "File to search at is not specified"  //
+    "Search pattern is not specified",            //
+    "Can't open file: no such file \
+    or program has not enough rights to open it"  //
 };
 
-string regex_flag = "-E";
-string color_flag = "--color=always";
+string REGEX_FLAG = "-E";
+string COLOR_FLAG = "--color=always";
+const string COLOR_START = "[01;31m[K";
+const string COLOR_END = "[m[K";
 
 const int error_codes[E_NUM] = {2, 3};
 
 // Helpers
 void raise_error(int code);
 File open_file(string path);
-bool contains(int s_length, string source, int sub_length, string substring);
-bool equals(string source1, string source2);
-int get_string_length(string source);
-void add_char(int* length, string* source, char character);
-string read_line(File file, int* length, bool* end);
 void parse_args(                 //
     int count, string* args,     //
     bool* color, bool* regex,    //
     File* file, string* pattern  //
+);
+// IO
+string read_line(File file, int* length, bool* end);
+void print_hightlighted(int length, string source, List start, List end);
+// List functions
+List create_list();
+void push(List list, int value);
+void free_list(List list);
+// Strings
+void add_char(int* length, string* source, char character);
+int get_string_length(string source);
+bool equals(string source1, string source2);
+// start & end arrays will contain indices of match
+bool contains(                         //
+    int s_length, string source,       //
+    int sub_length, string substring,  //
+    List start, List end,              //
+    bool should_regex                  //
 );
 
 int main(int argc, string* argv) {
@@ -63,19 +79,49 @@ int main(int argc, string* argv) {
         bool exit;
         string read = read_line(file, &str_length, &exit);
         if (exit) {
+            free(read);
             break;
         }
-        bool found = contains(str_length, read, pattern_length, pattern);
+        List start = create_list();
+        List end = create_list();
+        bool found = contains(        //
+            str_length, read,         //
+            pattern_length, pattern,  //
+            start, end,               //
+            regex                     //
+        );
         if (found) {
             exit_code = FOUND;
-            // TODO: Implement color
-            printf("%s\n", read);
+            if (color) {
+                print_hightlighted(str_length, read, start, end);
+            } else {
+                printf("%s\n", read);
+            }
         }
+        free_list(start);
+        free_list(end);
         free(read);
     }
 
     fclose(file);
     return exit_code;
+}
+
+void print_hightlighted(int length, string source, List start, List end) {
+    for (int i = 0; i < length; ++i) {
+        for (int j = 0; j < start->size; ++j) {
+            if (i == start->body[j]) {
+                printf("%s", COLOR_START);
+            }
+        }
+        printf("%c", source[i]);
+        for (int j = 0; j < end->size; ++j) {
+            if (i == end->body[j]) {
+                printf("%s", COLOR_END);
+            }
+        }
+    }
+    printf("\n");
 }
 
 void parse_args(                 //
@@ -86,9 +132,9 @@ void parse_args(                 //
     *color = false;
     *regex = false;
     for (int i = 0; i < count; ++i) {
-        if (equals(args[i], color_flag)) {
+        if (equals(args[i], COLOR_FLAG)) {
             *color = true;
-        } else if (equals(args[i], regex_flag)) {
+        } else if (equals(args[i], REGEX_FLAG)) {
             *regex = true;
         }
         if (*color && *regex) {
@@ -136,9 +182,9 @@ void parse_args(                 //
 }
 
 string read_line(File file, int* length, bool* end) {
-    string read = malloc(0);
+    string read = malloc(mem(char, 1));
     forever {
-        char character;
+        char character = EOF;
         int scanned = fscanf(file, "%c", &character);
         if (                                          //
             character == '\n' || character == EOF ||  //
@@ -183,25 +229,97 @@ bool equals(string source1, string source2) {
     return true;
 }
 
-bool contains(int s_length, string source, int sub_length, string substring) {
-    if (s_length < sub_length) {
-        return false;
-    }
-    for (int offset = 0; offset <= s_length - sub_length; ++offset) {
-        bool shift = false;
-        // TODO: Implement regex
-        for (int i = 0; i < sub_length; ++i) {
-            if (source[offset + i] != substring[i]) {
-                shift = true;
+bool contains(                         //
+    int s_length, string source,       //
+    int sub_length, string substring,  //
+    List start, List end,              //
+    bool should_regex                  //
+) {
+    for (int i = 0; i < s_length; ++i) {
+        int search_pos = i;
+        int sub_pos = 0;
+        bool found = true;
+        int match_end_offset = 0;
+        bool repeat = false;
+        int repeat_count = 0;
+        char repeat_char = '\0';
+        forever {
+            if (search_pos >= s_length || sub_pos >= sub_length) {
+                if (sub_pos + 1 <= sub_length) {
+                    found = false;
+                }
+                if (found) {
+                    push(start, i);
+                    int final_length = sub_length - match_end_offset;
+                    int end_pos = i + final_length + repeat_count - 1;
+                    push(end, end_pos);
+                }
                 break;
             }
+            if (repeat) {
+                if (source[search_pos] == repeat_char) {
+                    repeat_count += 1;
+                    search_pos += 1;
+                    continue;
+                } else {
+                    repeat = false;
+                    sub_pos += 1;
+                    continue;
+                }
+            }
+            if (source[search_pos] != substring[sub_pos]) {
+                // Regexp checks
+                if (should_regex) {
+                    // If current pattern character is `+` or `*`, start
+                    // repeating equality checks with previous character
+                    if (substring[sub_pos] == '+' ||
+                        substring[sub_pos] == '*'  //
+                    ) {
+                        repeat = true;
+                        repeat_char = substring[sub_pos - 1];
+                        match_end_offset += 1;
+                        continue;
+                    }
+                    // If current or next pattern symbol is `?` or `*` skip
+                    // it
+                    if (  //
+                        substring[sub_pos] == '?' ||
+                        (sub_pos + 1 < sub_length &&
+                         (substring[sub_pos + 1] == '?' ||
+                          substring[sub_pos + 1] == '*'))  //
+                    ) {
+                        if (substring[sub_pos] == '?') {
+                            match_end_offset += 2;
+                        }
+                        sub_pos += 1;
+                        continue;
+                    }
+                }
+                found = false;
+            }
+            search_pos += 1;
+            sub_pos += 1;
         }
-        if (shift) {
-            continue;
-        }
-        return true;
     }
-    return false;
+    return start->size != 0;
+}
+
+void push(List list, int value) {
+    list->size += 1;
+    list->body = realloc(list->body, mem(int, list->size));
+    list->body[list->size - 1] = value;
+}
+
+List create_list() {
+    List list = malloc(sizeof(SizedList));
+    list->size = 0;
+    list->body = malloc(sizeof(int));
+    return list;
+}
+
+void free_list(List list) {
+    free(list->body);
+    free(list);
 }
 
 File open_file(string path) {
