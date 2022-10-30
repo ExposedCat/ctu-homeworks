@@ -21,3 +21,4 @@ PRP/*/vgcore.*
 PRP/*/package.zip
 PRP/practices/cv*/*
 !PRP/practices/**/*.c
+PRP/homework-08/libqueue.so
