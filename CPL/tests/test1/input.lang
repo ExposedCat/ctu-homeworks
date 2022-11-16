@@ -1,0 +1,21 @@
+Advances in the field of mobile robotics are gradually enabling long-term deployment of autonomous robots in human environments.
+As these environments change over time, the robots have to deal with the fact that their world knowledge is incomplete and uncertain.
+Although probabilistic mapping methods have demonstrated the ability to represent incomplete knowledge about the environment, they generally assume that the corresponding uncertainty is caused by inherent sensor noise rather than by natural processes that cause the environment to change over time.
+Thus, traditional mapping methods treat measurements of dynamic environment states as outliers.
+This undermines the ability of the mapping methods to reflect the environment dynamics and provide support for long-term mobile robot autonomy. 
+Recent works have demonstrated that exploiting the outlying measurements allows to characterize some environment changes, which improves robot localisation in changing environments. 
+
+In our approach, we assume that some of the mid- to long-term processes that exhibit themselves through environment changes are periodic.
+These processes can be both natural, e.g. seasonal foliage changes, or artificial, e.g. human activities characterized by regular routines.
+Regardless of the primary cause of these processes, we hypothesize that the regularity of the environment changes can be exploited by robots to build more robust representations of their surroundings.
+
+We propose to represent the probability of the elementary environment states by combination of harmonic functions whose amplitudes and periodicities relate to the influences and frequencies of the hidden processes that cause the environment variations.
+This allows for efficient representation of the spatio-temporal dynamics as well as prediction of future environment states. 
+To obtain the parameters of the harmonic functions, we propose to treat the long-term observations of the environment states as signals, which can be analysed in the frequency domain. 
+
+An advantage of our approach is its universal applicability it can introduce dynamics to any stationary environment model that represents the world as a set of independent components.
+Introduction of the dynamics is achieved simply by representing the uncertainty of the elementary states as probabilistic functions of time instead of constants that are updated only when the given state is observed by a robot.
+The approach, which was originally introduced in, was successfully applied to landmark maps to improve localisation and to topological maps to improve navigation and robotic search.
+The application of the method to occupancy grids not only reduces memory requirements, but also enables lifelong spatio-temporal exploration of changing environments.
+In this paper, we summarize and extend the previous results by a thorough examination of the method's ability to efficiently represent environment changes over long time periods, predict the future environment states and use these predictions to improve the robustness of robot localisation and navigation.
+While the main aim of our method is to deal with periodic changes, we also show that its combination with a persistence model allows to learn and deal with nonperiodic dynamics as well.
