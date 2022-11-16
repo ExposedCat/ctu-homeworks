@@ -16,9 +16,10 @@ R = (1, 0)
 R_U = (1, -1)
 R_D = (1, 1)
 
+# https://samsoft.org.uk/reversi/strategy.htm#maxdiscs
 
 class MyPlayer:
-    """Dummy player with no strategy"""
+    """Dummy player with no strategy, but with a huge potential"""
 
     def __init__(self, my_color: int, opponent_color: int) -> MyPlayer:
         self.name = "prokoart"
@@ -26,6 +27,15 @@ class MyPlayer:
         self.color = my_color
         self.opponent_color = opponent_color
 
+    def move(self, board: list[list[int]]) -> Tuple[int, int] | None:
+        possible_moves = self.get_possible_moves(
+            self.color, self.opponent_color, board
+        )
+        if not len(possible_moves):
+            return None
+        return possible_moves[0]
+
+    # GAME METHODS
     def is_valid(self, row: int, col: int) -> bool:
         return 8 > row >= 0 and 8 > col >= 0
 
@@ -51,11 +61,3 @@ class MyPlayer:
                         if end:
                             break
         return moves
-
-    def move(self, board: list[list[int]]) -> Tuple[int, int] | None:
-        possible_moves = self.get_possible_moves(
-            self.color, self.opponent_color, board
-        )
-        if not len(possible_moves):
-            return None
-        return possible_moves[0]
