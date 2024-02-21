@@ -35,6 +35,6 @@ class ReversiIO(object):
             player = int(lines[9])
             for linei in range(11,len(lines)):
                 move = lines[linei].split()
-                moves.append((int(move[0]) , int(move[1])))
+                moves.append([int(move[0]) , int(move[1])])
             return {'board':board,'player':player,'moves':moves}        
         
